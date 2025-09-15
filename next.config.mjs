@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: { serverActions: { allowedOrigins: ['*'] } },
+  experimental: {
+    // Garante que exceljs e jszip sejam resolvidos no ambiente do server
+    serverComponentsExternalPackages: ['exceljs', 'jszip']
+  }
 };
+
 export default nextConfig;

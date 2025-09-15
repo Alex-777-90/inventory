@@ -7,7 +7,9 @@ import {
   filtrosExcluirSAP,
 } from '@/lib/excel';
 
+
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /* ======================= helpers ======================= */
 

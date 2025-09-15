@@ -9,6 +9,7 @@ import {
 import { carregarMapa } from '@/lib/mapDepositos';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /* ======================= utils ======================= */
 
