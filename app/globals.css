@@ -1,0 +1,195 @@
+/* ====== Tema base (Mockup Cards) ====== */
+:root {
+  --bg: #f1f5f9;            /* slate-100 */
+  --card: #ffffff;          /* white */
+  --text: #0f172a;          /* slate-900 */
+  --muted: #64748b;         /* slate-500 */
+  --border: #e2e8f0;        /* slate-200 */
+  --primary: #10b981;       /* emerald-500 */
+  --accent: #3b82f6;        /* blue-500 */
+  --shadow: 0 10px 25px rgba(2, 6, 23, .06);
+  --radius: 16px;
+}
+
+html[data-theme="dark"] {
+  --bg: #111114;
+  --card: #1c1c21;
+  --text: #e5e7eb;
+  --muted: #a1a1aa;
+  --border: #2a2a31;
+  --primary: #10b981;
+  --accent: #60a5fa;
+  --shadow: 0 12px 28px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+}
+
+/* ====== Layout ====== */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 22px 60px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.theme-switch {
+  margin-left: auto;
+}
+
+/* ====== Cards ====== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 18px 20px;
+  margin-top: 18px;
+}
+.card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+}
+
+/* ====== Inputs / Botões ====== */
+.row { 
+  display: flex; 
+  gap: 10px; 
+  align-items: center; 
+  flex-wrap: wrap; 
+  /* ADICIONE: */
+  width: 100%;           /* a linha passa a ter a largura do card */
+}
+
+.row.center {
+  justify-content: center;  /* centraliza horizontalmente */
+}
+
+input[type="file"], select, input[type="text"] {
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 8px 10px;
+  min-height: 40px;
+}
+html[data-theme="dark"] input[type="file"],
+html[data-theme="dark"] select,
+html[data-theme="dark"] input[type="text"] {
+  background: #141419;
+}
+
+.btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .06s ease, filter .1s ease;
+  box-shadow: var(--shadow);
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-ghost   { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+.btn-accent  { background: var(--accent); color: #fff; }
+
+/* ====== Segmented (Exportar: Físico / SAP / ZIP) ====== */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 1000px;
+  background: #f8fafc;
+  padding: 4px;
+  gap: 4px;
+}
+html[data-theme="dark"] .segmented { background: #141419; }
+
+.segmented input { display: none; }
+.segmented label {
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 700;
+  user-select: none;
+}
+.segmented input:checked + label {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* ====== Ajuda / Notas ====== */
+.note {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+hr.sep {
+  border: none; height: 1px; background: var(--border);
+  margin: 10px 0 14px;
+}
+
+
+/* --- centralizar título principal e manter o botão Dark à direita --- */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  position: relative;      /* novo */
+  justify-content: center; /* novo */
+}
+
+.title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-align: center;  /* novo */
+  width: 100%;         /* novo */
+  margin: 0;           /* novo */
+}
+
+.theme-switch {
+  position: absolute;  /* novo */
+  right: 0;            /* novo */
+  top: 0;              /* novo */
+}
+
+/* --- centralizar títulos dos cards --- */
+.card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  text-align: center;  /* novo */
+}
+
+/* --- (já estava) centralização dos controles dentro de cada card --- */
+.row { width: 100%; }
+.row.center { justify-content: center; }
+
+
+/* ====== Responsivo ====== */
+@media (max-width: 720px) {
+  .title { font-size: 26px; }
+  .row { gap: 8px; }
+  .card { padding: 14px; }
+}

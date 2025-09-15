@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  loadWorkbook,
+  workbookToBuffer,
+  filtrosExcluirSAP,
+  timestamp,
+} from '@/lib/excel';
+
+export const runtime = 'nodejs';
+
+const isPreview = (req: NextRequest) =>
+  new URL(req.url).searchParams.get('preview') === '1';
+
+function norm(s: any) {
+  return String(s ?? '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export const POST = async (req: NextRequest) => {
+  const form = await req.formData();
+  const file = form.get('file') as File | null;
+  const sheetName = (form.get('sheet') as string) || 'Planilha1';
+  const colDepositoPref = (form.get('colDeposito') as string) || '';
+
+  if (!file) return NextResponse.json({ error: 'Arquivo não enviado' }, { status: 400 });
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const wb = await loadWorkbook(buffer);
+  const ws = wb.getWorksheet(sheetName);
+  if (!ws) return NextResponse.json({ error: `Aba '${sheetName}' não encontrada` }, { status: 400 });
+
+  const header = ws.getRow(1);
+
+  // garante "detalhes"
+  let colDetalhes = -1;
+  for (let c = 1; c <= header.cellCount; c++) {
+    if (norm(header.getCell(c).value) === 'detalhes') { colDetalhes = c; break; }
+  }
+  if (colDetalhes === -1) {
+    colDetalhes = header.cellCount + 1;
+    header.getCell(colDetalhes).value = 'detalhes';
+  }
+
+  // preview: não precisa filtrar agora (análise também filtra)
+  if (isPreview(req)) return NextResponse.json({ ok: true });
+
+  // localizar coluna de depósito
+  const pref = norm(colDepositoPref);
+  let idxDeposito = -1;
+  for (let c = 1; c <= header.cellCount; c++) {
+    const v = norm(header.getCell(c).value);
+    if (pref && v === pref) { idxDeposito = c; break; }
+    if (v === 'codigo de deposito' || v === 'codigo deposito' || v === 'deposito') {
+      idxDeposito = c; break;
+    }
+  }
+  if (idxDeposito < 0) {
+    return NextResponse.json({ error: 'Coluna de depósito não encontrada (tente “Depósito”).' }, { status: 400 });
+  }
+
+  // 4.1 — excluir depósitos indesejados
+  for (let r = ws.rowCount; r >= 2; r--) {
+    const dep = String(ws.getRow(r).getCell(idxDeposito).value ?? '').trim();
+    if (filtrosExcluirSAP.has(dep)) ws.spliceRows(r, 1);
+  }
+
+  const out = await workbookToBuffer(wb);
+  const name = `ESTOQUE SAP ${timestamp()}.xlsx`;
+  return new Response(out, {
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${name}"`
+    }
+  });
+};

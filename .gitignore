@@ -1,0 +1,19 @@
+# dependências e build
+node_modules/
+.next/
+out/
+dist/
+coverage/
+
+# ambiente/local
+.env
+.env.*
+!.env.example
+*.local
+
+# arquivos temporários
+.DS_Store
+Thumbs.db
+
+# uploads temporários (se houver)
+uploads/
