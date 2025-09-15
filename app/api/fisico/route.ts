@@ -1,53 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  loadWorkbook,
-  workbookToBuffer,
-  getSheetNames,
-  timestamp,
-} from '@/lib/excel';
+import { loadWorkbook, getSheetNames } from '@/lib/excel';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-const isPreview = (req: NextRequest) =>
-  new URL(req.url).searchParams.get('preview') === '1';
+export async function POST(req: NextRequest) {
+  try {
+    const sp = req.nextUrl.searchParams;
+    const isPreview = sp.get('preview') === '1';
 
-export const POST = async (req: NextRequest) => {
-  const form = await req.formData();
-  const file = form.get('file') as File | null;
-  const sheetName = (form.get('sheet') as string) || '';
+    const form = await req.formData();
 
-  if (!file) return NextResponse.json({ error: 'Arquivo não enviado' }, { status: 400 });
-  const buffer = Buffer.from(await file.arrayBuffer());
+    // Aceita tanto 'fisico' quanto 'file' (seu front usa 'file')
+    const fisico = (form.get('fisico') || form.get('file')) as File | null;
 
-  // sem sheet → devolve lista de abas
-  if (!sheetName) {
-    const sheets = getSheetNames(buffer);
-    return NextResponse.json({ sheets });
-  }
-
-  const wb = await loadWorkbook(buffer);
-  const ws = wb.getWorksheet(sheetName);
-  if (!ws) return NextResponse.json({ error: `Aba '${sheetName}' não encontrada` }, { status: 400 });
-
-  // adiciona "depósito SAP" se não existir
-  const header = ws.getRow(1);
-  let has = false;
-  for (let c = 1; c <= header.cellCount; c++) {
-    const v = String(header.getCell(c).value ?? '').trim().toLowerCase();
-    if (v === 'depósito sap' || v === 'deposito sap') { has = true; break; }
-  }
-  if (!has) header.getCell(header.cellCount + 1).value = 'depósito SAP';
-
-  // preview: só confirma
-  if (isPreview(req)) return NextResponse.json({ ok: true });
-
-  // download (opcional)
-  const out = await workbookToBuffer(wb);
-  const name = `ESTOQUE FISICO ${timestamp()}.xlsx`;
-  return new Response(out, {
-    headers: {
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': `attachment; filename="${name}"`
+    if (!(fisico instanceof File)) {
+      return NextResponse.json({ error: 'Envie a planilha do Físico.' }, { status: 400 });
     }
-  });
-};
+
+    const sheet = (form.get('sheet') || '').toString().trim();
+    const ab = await fisico.arrayBuffer();
+    const wb = await loadWorkbook(ab);
+
+    // Se 'preview=1' -> apenas valida (arquivo + aba)
+    if (isPreview) {
+      if (!sheet) {
+        return NextResponse.json({ error: 'Selecione a aba do Físico.' }, { status: 400 });
+      }
+      if (!wb.getWorksheet(sheet)) {
+        return NextResponse.json({ error: `Aba "${sheet}" não encontrada no Físico.` }, { status: 400 });
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // Sem preview:
+    // - Se NÃO veio 'sheet' -> listar abas
+    if (!sheet) {
+      const sheets = getSheetNames(wb);
+      if (!sheets.length) {
+        return NextResponse.json({ error: 'Nenhuma aba encontrada no arquivo do Físico.' }, { status: 400 });
+      }
+      return NextResponse.json({ sheets });
+    }
+
+    // - Se veio 'sheet' -> validar e confirmar
+    if (!wb.getWorksheet(sheet)) {
+      return NextResponse.json({ error: `Aba "${sheet}" não encontrada no Físico.` }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error('[api/fisico] erro:', err);
+    return NextResponse.json(
+      { error: err?.message || 'Falha ao processar a planilha do Físico.' },
+      { status: 500 },
+    );
+  }
+}

@@ -1,14 +1,17 @@
 {
   "name": "inventario-vercel",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
+    "build": "cross-env NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "next start"
   },
   "dependencies": {
     "exceljs": "4.4.0",
-    "formidable": "3.5.1",
     "jszip": "3.10.1",
     "next": "14.2.5",
     "react": "18.3.1",
@@ -16,9 +19,11 @@
     "xlsx": "0.18.5",
     "zod": "3.23.8"
   },
-  "type": "module",
   "devDependencies": {
-    "@types/react": "^19.1.13",
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "cross-env": "^7.0.3",
     "typescript": "5.9.2"
   }
 }
